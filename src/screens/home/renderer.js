@@ -17,7 +17,7 @@ function loadTasks()
 {
   ipcRenderer.invoke('task:load').then((tasks) => {
     tbodyTasks.innerHTML = '';
-
+ 
     if (tasks instanceof Array && tasks.length == 0) {
       let column = document.createElement('td');
       column.setAttribute('colspan', '2');  

@@ -2,6 +2,8 @@ const {app, BrowserWindow, ipcMain} = require('electron')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid');
 
+const { appMenu } = require('./menu');
+
 let tasks = [
   {
     id: 2,
@@ -21,6 +23,8 @@ function createWindow () {
   })
 
   mainWindow.loadFile('./src/screens/home/index.html')
+
+  appMenu(mainWindow);
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show()
