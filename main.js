@@ -2,16 +2,14 @@ const {app, BrowserWindow, ipcMain} = require('electron')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid');
 
+const Store = require('electron-store');
+const store = new Store();
+const storageKey = 'todo';
+
 const { appMenu } = require('./menu');
 
-let tasks = [
-  {
-    id: 2,
-    description: 'first',
-    finished: false,
-  }
-]
-
+let tasks = store.get(storageKey)
+  
 function createWindow () {
   const mainWindow = new BrowserWindow({
     width: 800,
@@ -24,7 +22,7 @@ function createWindow () {
 
   mainWindow.loadFile('./src/screens/home/index.html')
 
-  appMenu(mainWindow);
+  appMenu(mainWindow, createTask, createAbout);
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show()
@@ -53,11 +51,12 @@ ipcMain.handle('task:new', async () => {
 
 ipcMain.on('task:save', async (e, task) => {
   try {
-  task = {...task, id: uuidv4() }
-  tasks.push(task)
-  createTaskWindow.close()
-  e.reply('task:reload', 'reload')
-  console.log('\n\nSalvando...')
+    task = {...task, id: uuidv4() }
+    tasks.push(task) 
+    createTaskWindow.close()
+    store.set(storageKey, tasks);
+    e.reply('task:reload', 'reload')
+
   } catch (e) {
     console.log(e);
   }
@@ -65,7 +64,7 @@ ipcMain.on('task:save', async (e, task) => {
 
 ipcMain.on('task:done', async (e, id) => {
   tasks = tasks.map((task) => {
-    if (task.id == id) {
+    if (task.id == id) { 
       return {
         ...task,
         finished: true,
@@ -73,7 +72,7 @@ ipcMain.on('task:done', async (e, id) => {
     }
     return task
   })
-
+  store.set(storageKey, tasks);
   e.reply('task:reload', 'reload')
 });
 
@@ -99,4 +98,24 @@ function createTask() {
   })
 
   return createTaskWindow
+}
+
+function createAbout() {
+  const aboutWindow = new BrowserWindow({
+    visible: false,
+    width: 300,
+    height: 300,
+    show: false,
+    webPreferences: {
+      nodeIntegration: true,
+    }
+  })
+
+  aboutWindow.loadFile('./src/screens/about/index.html')
+
+  aboutWindow.once("ready-to-show", () => {
+    aboutWindow.show()
+  })
+
+  return aboutWindow
 }
